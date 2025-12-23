@@ -3,66 +3,112 @@ import httpx
 import plotly.express as px
 import asyncio
 
-# --- BACKEND LOGIC (The "FastAPI" part) ---
+# --- BACKEND LOGIC ---
 async def fetch_github_data(username):
-    GITHUB_API_URL = "https://api.github.com/users"
-    async with httpx.AsyncClient() as client:
-        # Fetch user profile
-        user_resp = await client.get(f"{GITHUB_API_URL}/{username}")
-        if user_resp.status_code != 200:
-            return None
-        
-        # Fetch user repos
-        repo_resp = await client.get(f"{GITHUB_API_URL}/{username}/repos")
-        repos = repo_resp.json()
-        
-        # Calculate Language Distribution
-        languages = {}
-        for repo in repos:
-            lang = repo.get("language")
-            if lang:
-                languages[lang] = languages.get(lang, 0) + 1
-        
-        return {
-            "profile": user_resp.json(),
-            "language_distribution": languages,
-            "total_repos": len(repos)
+    # Note: For public data, a token isn't strictly required for REST, 
+    # but GraphQL requires a Personal Access Token (PAT).
+    # If you don't have a token, we fallback to 'Top Starred' repos.
+    
+    GITHUB_GRAPHQL_URL = "https://api.github.com/graphql"
+    # To get REAL pinned repos, you need a token in your Streamlit Secrets
+    token = st.secrets.get("GITHUB_TOKEN") 
+    
+    headers = {"Authorization": f"Bearer {token}"} if token else {}
+    
+    # GraphQL Query for Pinned Items
+    query = """
+    query($login: String!) {
+      user(login: $login) {
+        pinnedItems(first: 6, types: REPOSITORY) {
+          nodes {
+            ... on Repository {
+              name
+              description
+              url
+              stargazerCount
+              forkCount
+              primaryLanguage { name }
+            }
+          }
         }
+        repositories(first: 100, ownerAffiliations: OWNER) {
+          totalCount
+          nodes {
+            primaryLanguage { name }
+          }
+        }
+        avatarUrl
+        name
+        bio
+        location
+      }
+    }
+    """
 
-# --- FRONTEND UI (The Streamlit part) ---
-st.set_page_config(page_title="GitHub Analyzer", layout="wide")
+    async with httpx.AsyncClient() as client:
+        if token:
+            # Try GraphQL for Pinned Repos
+            resp = await client.post(GITHUB_GRAPHQL_URL, json={"query": query, "variables": {"login": username}}, headers=headers)
+            if resp.status_code == 200:
+                raw_data = resp.json().get("data", {}).get("user")
+                if raw_data:
+                    # Parse Languages for the chart
+                    langs = {}
+                    for r in raw_data['repositories']['nodes']:
+                        l = r.get('primaryLanguage')
+                        if l:
+                            langs[l['name']] = langs.get(l['name'], 0) + 1
+                    
+                    return {
+                        "profile": raw_data,
+                        "language_distribution": langs,
+                        "total_repos": raw_data['repositories']['totalCount'],
+                        "pinned_repos": raw_data['pinnedItems']['nodes']
+                    }
 
-st.title("🚀 Real-Time GitHub Profile Analyzer")
-st.markdown("This app analyzes GitHub profiles using Python logic directly.")
-
-username = st.text_input("Enter GitHub Username", "tiangolo")
-
-if st.button("Analyze Profile"):
-    with st.spinner(f"Analyzing {username}..."):
-        # Running the async function inside Streamlit
-        data = asyncio.run(fetch_github_data(username))
+        # FALLBACK: If no token or GraphQL fails, use REST (Top Starred instead of Pinned)
+        rest_url = f"https://api.github.com/users/{username}"
+        user_resp = await client.get(rest_url)
+        repo_resp = await client.get(f"{rest_url}/repos?per_page=100") # Pagination fix
         
-        if data:
-            col1, col2 = st.columns([1, 2])
+        if user_resp.status_code == 200:
+            u = user_resp.json()
+            r_list = repo_resp.json()
+            langs = {}
+            for r in r_list:
+                l = r.get('language')
+                if l: langs[l] = langs.get(l, 0) + 1
             
-            with col1:
-                st.image(data['profile']['avatar_url'], width=200)
-                st.header(data['profile'].get('name') or username)
-                st.info(f"📍 Location: {data['profile'].get('location', 'Not specified')}")
-                st.metric("Total Repositories", data['total_repos'])
-                st.write(f"📝 Bio: {data['profile'].get('bio', 'No bio available')}")
-            
-            with col2:
-                langs = data['language_distribution']
-                if langs:
-                    fig = px.pie(
-                        values=list(langs.values()), 
-                        names=list(langs.keys()), 
-                        title="Top Languages Used",
-                        hole=0.4
-                    )
-                    st.plotly_chart(fig, use_container_width=True)
-                else:
-                    st.warning("No language data found for this user.")
-        else:
-            st.error("User not found! Please check the username.")
+            return {
+                "profile": {"avatarUrl": u['avatar_url'], "name": u['name'], "bio": u['bio'], "location": u['location']},
+                "language_distribution": langs,
+                "total_repos": u['public_repos'],
+                "pinned_repos": sorted(r_list, key=lambda x: x['stargazers_count'], reverse=True)[:6]
+            }
+    return None
+
+# --- UI CODE ---
+st.set_page_config(page_title="GitHub Analyzer", layout="wide")
+st.title("🚀 GitHub Profile Analyzer")
+
+username = st.text_input("Enter GitHub Username", "octocat")
+
+if st.button("Analyze"):
+    data = asyncio.run(fetch_github_data(username))
+    if data:
+        col1, col2 = st.columns([1, 2])
+        with col1:
+            st.image(data['profile']['avatarUrl'], width=150)
+            st.header(data['profile']['name'] or username)
+            st.metric("Total Repositories", data['total_repos'])
+        
+        with col2:
+            fig = px.pie(values=list(data['language_distribution'].values()), 
+                         names=list(data['language_distribution'].keys()), title="Tech Stack")
+            st.plotly_chart(fig)
+
+        st.subheader("📌 Pinned / Featured Repositories")
+        cols = st.columns(3)
+        for i, repo in enumerate(data['pinned_repos']):
+            with cols[i % 3]:
+                st.info(f"**[{repo.get('name')}]({repo.get('url') or repo.get('html_url')})**\n\n{repo.get('description') or 'No description'}")
