@@ -1,29 +1,71 @@
-# 🚀 GitHub Profile Analyzer
-A Full-Stack application featuring a **FastAPI** backend and **Streamlit** frontend.
+🚀 Real-Time GitHub Profile Analyzer
+A full-stack data visualization dashboard that provides deep insights into any GitHub profile. This project showcases the ability to handle asynchronous API calls, complex data visualization, and automated CI/CD pipelines.
 
-## 🛠️ Features
-- Real-time data fetching from GitHub REST API.
-- Data visualization using **Plotly**.
-- Automated **CI/CD** via GitHub Actions.
-- Hosted on **Render** and **Streamlit Cloud**.
+🔗 Live Demo
 
-## 🚦 How to Run Locally
-1. `python -m venv venv`
-2. `source venv/bin/activate`
-3. `pip install -r backend/requirements.txt`
-4. `uvicorn backend.main:app --reload`
+✨ Features
+Real-Time Analytics: Fetches live data directly from the GitHub API using httpx and asyncio.
 
-## Streamlit_app_LINK:
+Comprehensive Repo Scan: Implements pagination to accurately track users with 40+ repositories.
 
-YOU CAN JUST PASTE THE GITHUB PROFILE NAME AND CLICK ANALYSE AND GET ALL THE PINNED REPOS AND TOTAL REPOS COUNT
+Tech Stack Visualization: Dynamic Plotly charts showing the distribution of languages across all projects.
+
+Featured Repositories: Automatically identifies and highlights Pinned/Top repositories with interactive cards.
+
+Modern UI: Clean, responsive dashboard built with Streamlit.
+
+🛠️ Tech Stack
+Frontend: Streamlit (Python-based Web Framework)
+
+Backend: Python 3.11 with Asyncio
+
+Data Fetching: Httpx (Asynchronous HTTP Client)
+
+Visualization: Plotly Express
+
+CI/CD: GitHub Actions (Automated Testing & Smoke Tests)
+
+Deployment: Streamlit Community Cloud
+
+⚙️ CI/CD Workflow
+This project utilizes Continuous Integration and Continuous Deployment via GitHub Actions:
+
+Code Quality Check: Every push triggers a suite of tests to verify API connectivity and logic.
+
+Smoke Testing: Automated checks ensure the Streamlit app starts correctly before going live.
+
+Auto-Deploy: Once tests pass, the live dashboard is instantly updated on Streamlit Cloud.
+
+🚀 Installation & Local Setup
+Clone the repository:
+
+Bash
+
+git clone https://github.com/YOUR_USERNAME/Real-Time-GitHub-Profile-Analyzer.git
+cd Real-Time-GitHub-Profile-Analyzer
+Create and activate a virtual environment:
+
+Bash
+
+python -m venv venv
+.\venv\Scripts\activate
+Install dependencies:
+
+Bash
+
+pip install -r requirements.txt
+Run the application:
+
+Bash
+
+streamlit run app.py
+📸 Screenshots
+![Streamlit_app](screenshot.png)
+
+## Streamlit LInk
 ```
 https://real-time-app-profile-analyzer.streamlit.app/
 ```
-
-
-## Screenshot
-![Streamlit_app](screenshot.png)
-
 
 📂Project Structure
 
