@@ -19,10 +19,13 @@ github-analyzer/
 
 ├── .github/workflows/
 
-├── app.py                # Combined Backend + Frontend logic
+│   └── pipeline.yml       # The CI/CD engine
+├── tests/
+│   └── test_logic.py      # Automated tests
 
-├── requirements.txt      # Combined dependencies
+├── app.py                 # Your main code (Combined)
 
-├── .gitignore
+├── requirements.txt       # Streamlit, httpx, plotly, pytest
+
 └── README.md
 
