@@ -16,15 +16,13 @@ A Full-Stack application featuring a **FastAPI** backend and **Streamlit** front
 📂Project Structure
 
 github-analyzer/
+
 ├── .github/workflows/
-│   └── deploy.yml          # CI/CD Pipeline
-├── backend/
-│   ├── main.py             # FastAPI App
-│   └── requirements.txt    # Backend dependencies
-├── frontend/
-│   ├── ui.py               # Streamlit App
-│   └── requirements.txt    # Frontend dependencies
-├── .env                    # Local secrets (ignored by git)
-├── .gitignore              # The file we created earlier
-└── README.md               # Your "sales pitch" to recruiters
+
+├── app.py                # Combined Backend + Frontend logic
+
+├── requirements.txt      # Combined dependencies
+
+├── .gitignore
+└── README.md
 
