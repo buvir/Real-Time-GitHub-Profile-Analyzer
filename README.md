@@ -13,6 +13,18 @@ A Full-Stack application featuring a **FastAPI** backend and **Streamlit** front
 3. `pip install -r backend/requirements.txt`
 4. `uvicorn backend.main:app --reload`
 
+## Streamlit_app_LINK:
+
+YOU CAN JUST PASTE THE GITHUB PROFILE NAME AND CLICK ANALYSE AND GET ALL THE PINNED REPOS AND TOTAL REPOS COUNT
+```
+https://real-time-app-profile-analyzer.streamlit.app/
+```
+
+
+## Screenshot
+![Streamlit_app](screenshot.png)
+
+
 📂Project Structure
 
 github-analyzer/
